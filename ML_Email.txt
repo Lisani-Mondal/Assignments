@@ -1,0 +1,117 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+import pandas as pd
+import numpy as np
+
+data=pd.read_csv("../input/email-spam-classification-dataset-csv/emails.csv", encoding='latin')
+data.shape
+
+data.head()
+
+data.drop(columns=['Email No.'], inplace=True)
+data.head()
+
+data.isnull().any().value_counts()
+
+X=data.iloc[:, :data.shape[1]-1]
+y=data.iloc[:, -1]
+X.shape, y.shape
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test=train_test_split(X, y, test_size=0.15, random_state=8)
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC, LinearSVC
+from sklearn.neural_network import MLPClassifier
+
+models={"Logistic Regression": LogisticRegression(random_state=8, solver='lbfgs', max_iter=2000),
+        "Linear SVM":LinearSVC(random_state=8, max_iter=3000),
+        "Polynomical SVM":SVC(kernel="poly", degree=2, random_state=8),
+        "RBF SVM":SVC(kernel="rbf", random_state=8),
+        "Sigmoid SVM":SVC(kernel="sigmoid", random_state=8),
+        "Multi-layer Perceptron Classification": MLPClassifier(hidden_layer_sizes=[20, 20], \
+                                                           learning_rate='adaptive', random_state=8)}
+from sklearn.metrics import accuracy_score
+for model_name, model in models.items():
+    y_pred=model.fit(X_train, y_train).predict(X_test)
+    print(f"Accuracy for {model_name} model : {accuracy_score(y_test, y_pred)}")
+
+def get_count(text):
+    wordCounts = dict()
+    for word in text.split():
+        if word in wordCounts:
+            wordCounts[word] += 1
+        else:
+            wordCounts[word] = 1
+    
+    return wordCounts
+def euclidean_difference(test_WordCounts, training_WordCounts):
+    total = 0
+    for word in test_WordCounts:
+        if word in test_WordCounts and word in training_WordCounts:
+            total += (test_WordCounts[word] - training_WordCounts[word])**2
+            del training_WordCounts[word]
+        else:
+            total += test_WordCounts[word]**2
+    return total**0.5
+
+def get_class(selected_Kvalues):
+    spam_count = 0
+    ham_count = 0
+    for value in selected_Kvalues:
+        if value[0] == "spam":
+            spam_count += 1
+        else:
+            ham_count += 1
+    if spam_count > ham_count:
+        return "spam"
+    else:
+        return "ham"
+def knn_classifier(training_data, training_labels, test_data, K, tsize):
+    print("Running KNN Classifier...")
+    
+    result = []
+    counter = 1
+    training_WordCounts = [] 
+    for training_text in training_data:
+        training_WordCounts.append(get_count(training_text))
+    for test_text in test_data:
+
+similarity = [] # List of euclidean distances
+        test_WordCounts = get_count(test_text)  # word counts for test email
+    for index in range(len(training_data)):
+        euclidean_diff =\
+        euclidean_difference(test_WordCounts, training_WordCounts[index])
+        similarity.append([training_labels[index], euclidean_diff])
+        similarity = sorted(similarity, key = lambda i:i[1])
+        # Predicting the class of email
+        result.append(get_class(selected_Kvalues))
+    return result
+def main(K):
+    data = load_data()
+    data = preprocess_data(data)
+    training_data, test_data, training_labels, test_labels = split_data(data)
+    tsize = len(test_data)
+    result = knn_classifier(training_data, training_labels, test_data[:tsize], K, tsize) 
+    accuracy = accuracy_score(test_labels[:tsize], result)
+    print("training data size\t: " + str(len(training_data)))
+
+print("test data size\t\t: " + str(len(test_data)))
+    print("K value\t\t\t\t: " + str(K))
+    print("Samples tested\t\t: " + str(tsize))
+    print("% accuracy\t\t\t: " + str(accuracy * 100))
+    print("Number correct\t\t: " + str(int(accuracy * tsize)))
+    print("Number wrong\t\t: " + str(int((1 - accuracy) * tsize)))
+    # Select K nearest neighbours
+    selected_Kvalues = [] 
+    for i in range(K):
+        selected_Kvalues.append(similarity[i])
