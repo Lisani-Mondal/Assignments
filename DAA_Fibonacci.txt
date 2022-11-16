@@ -1,0 +1,44 @@
+import java.util.*;
+
+public class Fibonacci
+{
+static void Fib_nonRecursive(int n)
+{
+int a=0;
+int b=1;
+int c;
+if (n==0)
+{
+System.out.println(a);
+}
+else
+{
+System.out.print("Series upto "+n+" numbers using non-recursive is : "+a+" "+b);
+for(int i=2;i<n;i++)
+{
+c=a+b;
+a=b;
+b=c;
+System.out.print(" "+c+" ");
+}
+}
+}
+static int Fib_recursive(int n)
+{
+if (n==0 || n==1)
+return n;
+else
+return (Fib_recursive(n-1)+Fib_recursive(n-2)); 
+}
+public static void main(String[] args)
+{
+System.out.print("Enter number :");
+Scanner sc = new Scanner(System.in);
+int n = sc.nextInt();
+Fib_nonRecursive(n);
+System.out.println("");
+System.out.print("Series upto "+n+" numbers using recursive is :");
+for(int i=0;i<n;i++)
+System.out.print(" "+Fib_recursive(i));
+}
+}
